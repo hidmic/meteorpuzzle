@@ -1,0 +1,25 @@
+<head>
+  <title>MeteorJs meets Wall-E</title>
+</head>
+
+<body>
+  <h1>MeteorJs meets Wall-E</h1>
+  {{> puzzle}}  
+</body>	
+
+<template name="puzzle">
+  <div class="container">  
+    <div class="template">
+      {{#each boundPieces}}	  
+      <div class="bound-piece" style="{{xformCoord {{}} }}">
+	<img src="{{imageUrl}}"/>
+      </div>
+      {{/each}}      
+    </div>
+      {{#each unboundPieces}}	  
+      <div class="unbound-piece" style="{{xformCoord {{}} }}">
+	<img src="{{imageUrl}}"/>
+      </div>
+      {{/each}}      
+  </div>
+</template>
