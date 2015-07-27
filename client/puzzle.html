@@ -4,22 +4,25 @@
 
 <body>
   <h1>MeteorJs meets Wall-E</h1>
-  {{> puzzle}}  
+  {{>puzzle}}  
 </body>	
 
 <template name="puzzle">
-  <div class="container">  
-    <div class="template">
-      {{#each boundPieces}}	  
-      <div class="bound-piece" style="{{xformCoord {{}} }}">
-	<img src="{{imageUrl}}"/>
-      </div>
-      {{/each}}      
-    </div>
-      {{#each unboundPieces}}	  
-      <div class="unbound-piece" style="{{xformCoord {{}} }}">
-	<img src="{{imageUrl}}"/>
-      </div>
-      {{/each}}      
+  <div class="puzzle">    
+    {{#each pieces}}	        
+      {{> piece}}
+    {{/each}}        
+  </div>
+</template>
+
+<template name="piece">  
+  <div id="{{_id}}" class="piece, {{condition}}" style="top: {{top}}; left: {{left}};">        
+    {{#unless orphan}}
+      {{#each childs}}
+        {{> piece}}
+      {{/each}}  
+    {{else}}
+      <img src="{{imageUrl}}" height="{{height}}" width="{{width}}"/>
+    {{/if}}
   </div>
 </template>
