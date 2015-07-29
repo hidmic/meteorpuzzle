@@ -1,12 +1,19 @@
 .puzzle {
-    
+	overflow: scroll;
+    z-index:-1;
+}
+
+.arrangement {
+	position:absolute;
+	z-index:0;
 }
 
 .piece {
     position: absolute;
+    z-index:1;
 }
 
-.link {
-    position: absolute;
-    background-color: blue;
+.msg {
+	position: fixed;
+	z-index:2;
 }

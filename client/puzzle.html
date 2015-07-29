@@ -3,35 +3,36 @@
 </head>
 
 <body>
-  <h1>MeteorJs meets Wall-E</h1>
-  {{>puzzle}}  
+  <h1>MeteorJs meets Wall-E</h1>  
+  {{#with puzzle}}
+    {{> puzzle}}   
+  {{/with}}
 </body>	
 
-<template name="puzzle">
-  <div class="puzzle">    
+<template name="puzzle">  
+  <div class="puzzle" style="height: {{height}}; width:{{width}};">        
+    {{#with arrangement}}
+      {{> arrangement}}      
+    {{/with}}
     {{#each pieces}}	        
       {{> piece}}
     {{/each}}        
+  </div>    
+  {{#if message}}
+    <div class="msg">
+      <p>{{message}}</p>
+    </div>
+  {{/if}}  
+</template>
+
+<template name="arrangement">
+  <div class="arrangement" style="top: {{top}}; left: {{left}}; height: {{height}}; width:{{width}};">
+    <img src="{{imageUrl}}"/>    
   </div>
 </template>
 
 <template name="piece">  
-  <div id="{{_id}}" class="piece, {{orphan}}" style="top: {{top}}; left: {{left}}; height: {{height}}; width: {{width}}">        
-    {{#if orphan}}
-      {{#each links}}
-        {{> link}}
-      {{/each}}        
-    {{/if}}    
-    {{#unless primitive}}
-      {{#each childs}}
-        {{> piece}}
-      {{/each}}
-    {{else}}
-      <img src="{{image}}"/>
-    {{/if}}
+  <div id="{{pieceId}}" class="piece" style="top: {{top}}; left: {{left}}; height: {{height}}; width: {{width}};">
+    <img src="{{imageUrl}}"/>    
   </div>
-</template>
-
-<template name="link">
-  <div id="{{matchId}}" class="link" style="top: {{top}}; left: {{left}}; height: {{height}}; width: {{width}}"></div>
 </template>
