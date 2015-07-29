@@ -1,0 +1,12 @@
+.puzzle {
+    
+}
+
+.piece {
+    position: absolute;
+}
+
+.link {
+    position: absolute;
+    background-color: blue;
+}
