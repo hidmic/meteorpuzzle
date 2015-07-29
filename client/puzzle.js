@@ -8,16 +8,25 @@ Meteor.startup(function(){
 Meteor.methods({
     take: function(pieceId) {
 	var piece = Puzzle.findOne(pieceId);
-	if (piece.ownedBy != undefined) {
+	if (piece.properties.ownedBy) {
 	    throw new Meteor.Error("piece-owned", "The piece belongs to someone else!");
 	}
-	Puzzle.update(pieceId, {$set: {ownerId: this.userId}});	
+	if (piece.properties.parentId) {
+	    throw new Meteor.Error("piece-adopted", "The piece has been adopted by another!");
+	}
+	piece.propeties.ownedBy = this.userId;
+	Puzzle.update(pieceId, piece);	
     },
     move: function(pieceId, deltaX, deltaY) {
 	var piece = Puzzle.findOne(pieceId);
-	if (piece.ownedBy != this.userId) {
+	if (piece.properties.ownedBy != this.userId) {
 	    throw new Meteor.Error("piece-not-owned", "The piece doesn't belong to you!");
-	}	
+	}
+	if (piece.propeties.parentId) {
+	    throw new Meteor.Error("piece-adopted", "The piece has been adopted by another!");
+	}
+	piece = transform(piece, function(x, y) { return [x+deltaX, y+deltaY]; });
+	Puzzle.update(pieceId, piece);	
     },
     give: function(pieceId) {
 	var piece = Puzzle.findOne(pieceId);
@@ -72,13 +81,16 @@ Template.piece.events({
     },
     'mouseup .orphan': function(event) {
 	event.stopPropagation();
-	Meteor.call('give', event.currentTarget.id, function(error) {
-	    if (error) {		
-		
-		return;
-	    }
-	    Session.set('piece', undefined);	    
-	});    	    	
+	
+	if (Session.get('piece') != undefined) {
+	    Meteor.call('give', event.currentTarget.id, function(error) {
+		if (error) {		
+		    
+		    return;
+		}
+		Session.set('piece', undefined);	    
+	    });    	    	
+	}
     }
 });
 
@@ -87,16 +99,18 @@ Template.pieces.helpers({
 	return Puzzle.find({parentId: {$eq: this._id}});
     },
     height: function(){
-	return geoYmax(this.location) - geoYmin(this.location);
+	var bounds = geobounds(this.location);
+	return bounds[1][1] - bounds[0][1];
     },
     width: function(){
-	return geoXmax(this.location) - geoXmin(this.location);
+	var bounds = geobounds(this.location);
+	return bounds[1][0] - bounds[0][0];
     },
     top: function(){
-	return geoYmin(this.location);
+	return geobounds(this.location)[0][1];
     },
     left: function(){
-	return geoXmin(this.location);
+	return geobounds(this.location)[0][0];
     },
     condition: function(){
 	if (this.parentId == null) {

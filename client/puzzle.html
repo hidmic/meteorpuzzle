@@ -16,13 +16,22 @@
 </template>
 
 <template name="piece">  
-  <div id="{{_id}}" class="piece, {{condition}}" style="top: {{top}}; left: {{left}};">        
-    {{#unless orphan}}
+  <div id="{{_id}}" class="piece, {{orphan}}" style="top: {{top}}; left: {{left}}; height: {{height}}; width: {{width}}">        
+    {{#if orphan}}
+      {{#each links}}
+        {{> link}}
+      {{/each}}        
+    {{/if}}    
+    {{#unless primitive}}
       {{#each childs}}
         {{> piece}}
-      {{/each}}  
+      {{/each}}
     {{else}}
-      <img src="{{imageUrl}}" height="{{height}}" width="{{width}}"/>
+      <img src="{{image}}"/>
     {{/if}}
   </div>
+</template>
+
+<template name="link">
+  <div id="{{matchId}}" class="link" style="top: {{top}}; left: {{left}}; height: {{height}}; width: {{width}}"></div>
 </template>
