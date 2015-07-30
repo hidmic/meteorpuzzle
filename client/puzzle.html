@@ -4,35 +4,28 @@
 
 <body>
   <h1>MeteorJs meets Wall-E</h1>  
-  {{#with puzzle}}
-    {{> puzzle}}   
-  {{/with}}
+  {{#if ready}}
+    {{> puzzleTemplate puzzle}}   
+  {{/if}}
 </body>	
 
-<template name="puzzle">  
+<template name="puzzleTemplate">  
   <div class="puzzle" style="height: {{height}}; width:{{width}};">        
-    {{#with arrangement}}
-      {{> arrangement}}      
-    {{/with}}
+    {{> arrangeTemplate arrangement}}      
     {{#each pieces}}	        
-      {{> piece}}
+      {{> pieceTemplate}}
     {{/each}}        
   </div>    
-  {{#if message}}
-    <div class="message">
-      <p>{{message}}</p>
-    </div>
-  {{/if}}  
 </template>
 
-<template name="arrangement">
+<template name="arrangeTemplate">
   <div class="arrangement" style="top: {{top}}; left: {{left}}; height: {{height}}; width:{{width}};">
-    <img src="{{imageUrl}}" width="{{width}}" height="{{height}}"/>    
+    <img src="{{imageUrl}}" width="{{width}}" height="{{height}}"/>
   </div>
 </template>
 
-<template name="piece">  
-  <div id="{{pieceId}}" class="piece" style="top: {{top}}; left: {{left}}; height: {{height}}; width: {{width}};">
-    <img src="{{imageUrl}}" width="{{width}}" height="{{height}}"/
+<template name="pieceTemplate">  
+  <div id={{_id}} class="piece" style="top: {{top}}; left: {{left}}; height: {{height}}; width: {{width}};">
+    <img src="{{imageUrl}}" width="{{width}}" height="{{height}}"/>
   </div>
 </template>

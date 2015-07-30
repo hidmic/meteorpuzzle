@@ -1,22 +1,15 @@
 //Collections
-var Puzzles = new MongoDB.Collection('allpuzzles');
-var Pieces = new MongoDB.Collection('allpieces');
+var Puzzles = new Mongo.Collection('allpuzzles');
+var Pieces = new Mongo.Collection('allpieces');
 
 //Publications
 Meteor.publish('puzzles', function() {
-    return Puzzles.find({});
+    return Puzzles.find();
 });
 
 Meteor.publish('pieces', function() {
     return Pieces.find({}, {truePosition: 0})
 });
-
-function intersects(e1, e2) {
-    return !((e1.position[0]+e1.width<e2.position[0] || 
-	       e2.position[0]+e2.width<e1.position[0] ||
-	       e1.position[1]+e1.height<e2.position[1] || 
-	       e2.position[1]+e2.height<e1.position[1]));
-}
 
 //Methods
 Meteor.methods({
@@ -57,8 +50,8 @@ Meteor.methods({
 	Pieces.update(pieceId, piece);		
     },
     reset: function(puzzleId) {
-	var puzzle = Puzzle.find(puzzleId);
-	Pieces.find({puzzleId; {$eq: puzzleId}}).forEach(function(piece) 
+	var puzzle = Puzzles.findOne(puzzleId);
+	Pieces.find({puzzleId: {$eq: puzzleId}}).forEach(function(piece) {
 	    piece.inLock = false;
 	    do {
 		var deltaX = piece.width * (2 * Random.fraction() - 1)
@@ -66,48 +59,58 @@ Meteor.methods({
 		var newX = piece.position[0] + deltaX;
 		var newY = piece.position[1] + deltaY;
 		if (newX < 0) newX = puzzle.width + newX;
-		if (newX > puzzle.width) newX = newX - puzzle.width;
+		if (newX + piece.width > puzzle.width) newX = newX + piece.width - puzzle.width;
 		if (newY < 0) newY = puzzle.height + newY;
-		if (newY > puzzle.height) newY = newY - puzzle.height;
+		if (newY + piece.height > puzzle.height) newY = newY + piece.height - puzzle.height;
 		piece.position = [newX, newY];
-	    } while(intersect(piece, puzzle.arrangement));
+	    } while(intersects(piece, puzzle.arrangement));
 	    Pieces.update(piece._id, piece);
 	});
     }
 });
 
+function intersects(e1, e2) {
+    return !((e1.position[0]+e1.width<e2.position[0] || 
+	       e2.position[0]+e2.width<e1.position[0] ||
+	       e1.position[1]+e1.height<e2.position[1] || 
+	       e2.position[1]+e2.height<e1.position[1]));
+}
+
 Meteor.startup(function () {
-    var puzzle = EJSON.parse(Assets.getText('wall-e.json'));           
-    var xpuzzle = {
-	name: puzzle.name, 
-	height: puzzle.arrangement.height * 2, // As it must be at least 1.41 times larger in order to have its pieces around
-	width: puzzle.arrangement.width * 2,  // As it must be at least 1.41 times larger in order to have its pieces around
-	arrangement: {
-	    position: [
-		puzzle.arrangement.position[0] + puzzle.arrangement.width/2, 
-		puzzle.arrangement.position[1] + puzzle.arrangement.height/2
-	    ],
-	    width: puzzle.arrangement.width,
-	    height: puzzle.arrangement.height,
-	    imageUrl: puzzle.arrangement.imageUrl
-	}
-    };
-    Puzzles.insert(xpuzzle);    
-    _.each(puzzle.pieces, function(piece) {	    
-	var xpiece = {
-	    puzzleId: xpuzzle._id
-	    imageUrl: piece.imageUrl,
-	    truePosition: [
-		piece.position[0] + xpuzzle.arrangement.position[0],
-		piece.position[1] + xpuzzle.arrangement.position[1]
-	    ],
-	    position: [xpuzzle.width/2, xpuzzle.height/2],
-	    height: piece.height,
-	    width: piece.width,
-	    ownedBy: undefined,
-	    inLock: false
-	};
-	Pieces.insert(xpiece);
-    });
-    Meteor.call('reset', xpuzzle._id);
+    if (Puzzles.find().count() === 0) {
+	var puzzle = EJSON.parse(Assets.getText('wall-e.json'));           
+	var id = Puzzles.insert({
+	    name: puzzle.name, 
+	    height: puzzle.arrangement.height * 2, // As it must be at least 1.41 times larger in order to have its pieces around
+	    width: puzzle.arrangement.width * 2,  // As it must be at least 1.41 times larger in order to have its pieces around
+	    arrangement: {
+		position: [
+		    puzzle.arrangement.width/2, 
+		    puzzle.arrangement.height/2
+		],
+		width: puzzle.arrangement.width,
+		height: puzzle.arrangement.height,
+		imageUrl: puzzle.arrangement.imageUrl
+	    }
+	});    
+	_.each(puzzle.pieces, function(piece) {	    
+	    Pieces.insert({
+		puzzleId: id,
+		imageUrl: piece.imageUrl,
+		truePosition: [
+		    piece.position[0] + puzzle.arrangement.width/2,
+		    piece.position[1] + puzzle.arrangement.height/2
+		],
+		position: [
+		    puzzle.arrangement.width,
+		    puzzle.arrangement.height
+		],
+		height: piece.height,
+		width: piece.width,
+		ownedBy: undefined,
+		inLock: false
+	    });
+	});
+	Meteor.call('reset', id);
+    }
 });

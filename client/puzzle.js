@@ -1,12 +1,11 @@
 //Collections
 
-Meteor.subscribe('puzzles');
+var Puzzles = new Mongo.Collection('allpuzzles');
+var Pieces = new Mongo.Collection('allpieces');
 
-var Puzzles = new MongoDB.Collection('allpuzzles');
-
-Meteor.subscribe('pieces');
-
-var Pieces = new MongoDB.Collection('allpieces');
+//Subscriptions
+var PuzzleSubscription = Meteor.subscribe('puzzles');
+var PieceSubscription = Meteor.subscribe('pieces');
 
 //Method stubs
 Meteor.methods({   
@@ -20,15 +19,18 @@ Meteor.methods({
     }
 });
 
-//Bpdy
+//Body
 Template.body.helpers({
-    puzzle: function() {
-	return Puzzles.findOne({name: {$eq: Session.get('puzzle')}});
+    ready: function(){
+	return PuzzleSubscription.ready() && PieceSubscription.ready();
+    },
+    puzzle: function() {	
+	return Puzzles.findOne();
     }
 });
 
 //Puzzle
-Template.puzzle.events({
+Template.puzzleTemplate.events({
     'mousemove': function() {
 	var lastX;
 	var lastY;
@@ -49,17 +51,14 @@ Template.puzzle.events({
     }()
 });
 
-Template.puzzle.helpers({
-    pieces: function(){
-	return Pieces.find({puzzleId: {$eq: Session.get('puzzle')}});
-    },
-    message: function() {
-	return Session.get('message');
+Template.puzzleTemplate.helpers({    
+    pieces: function() {	
+	return Pieces.find({puzzleId: {$eq: this._id}});
     }
 });
 
 //Arrangement
-Template.arrangement.helpers({
+Template.arrangeTemplate.helpers({
    left: function(){
        return this.position[0];
    },
@@ -69,7 +68,7 @@ Template.arrangement.helpers({
 });
 
 //Pieces
-Template.piece.events({
+Template.pieceTemplate.events({
     'mousedown': function(event) {
 	Meteor.call('take', event.currentTarget.id, function(error) {
 	    if (error) {		
@@ -93,18 +92,15 @@ Template.piece.events({
     }
 });
 
-Template.pieces.helpers({           
+Template.pieceTemplate.helpers({           
     top: function() {
+	console.log(this);
     	return this.position[1];
     },
-    left: function() {    	
+    left: function() {   
+	console.log(this); 	
 	return this.position[0];		
     }            
-});
-
-Meteor.startup(function(){
-    var onePuzzle = Puzzle.findOne({});
-    Session.set('puzzle', onePuzzle._id);
 });
 
 
