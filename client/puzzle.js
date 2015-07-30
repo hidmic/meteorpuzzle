@@ -11,21 +11,22 @@ var Pieces = new MongoDB.Collection('allpieces');
 //Method stubs
 Meteor.methods({   
     move: function(pieceId, deltaX, deltaY) {
-	var piece = pieces.findOne(pieceId);
+	var piece = Pieces.findOne(pieceId);
 	if (piece.ownedBy != this.userId) {
 	    throw new Meteor.Error("piece-not-owned", "The piece doesn't belong to you!");
 	}		
-	piece.currLoc = transform(piece.currLoc, function(x, y) { return [x+deltaX, y+deltaY]; });
-	pieces.update(pieceId, piece);	
+	piece.position = [piece.position[0] + deltaX, piece.position[1] + deltaY];
+	Pieces.update(pieceId, piece);	
     }
 });
 
 //Bpdy
 Template.body.helpers({
-    puzzle: function(){
+    puzzle: function() {
 	return Puzzles.findOne({name: {$eq: Session.get('puzzle')}});
     }
 });
+
 //Puzzle
 Template.puzzle.events({
     'mousemove': function() {
@@ -37,7 +38,7 @@ Template.puzzle.events({
 	    if (pieceId != undefined) {
 		Meteor.call('move', pieceId, event.clientX - lastX, event.clientY - lastY, function(error) {
 		    if (error) {
-			Session.set("errorMsg", error.reason);
+			Session.set("message", {type: 'error',  content: 'error.reason'});
 			return;
 		    }				    
 		});
@@ -60,10 +61,10 @@ Template.puzzle.helpers({
 //Arrangement
 Template.arrangement.helpers({
    left: function(){
-       return this.fixPos[0];
+       return this.position[0];
    },
    top: function(){
-       return this.fixPos[1];
+       return this.position[1];
    }  
 });
 
@@ -94,13 +95,12 @@ Template.piece.events({
 
 Template.pieces.helpers({           
     top: function() {
-    	return this.currPos[1];
+    	return this.position[1];
     },
     left: function() {    	
-	return this.currPos[0];		
+	return this.position[0];		
     }            
 });
-
 
 Meteor.startup(function(){
     var onePuzzle = Puzzle.findOne({});

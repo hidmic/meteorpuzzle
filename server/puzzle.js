@@ -11,6 +11,13 @@ Meteor.publish('pieces', function() {
     return Pieces.find({}, {truePosition: 0})
 });
 
+function intersects(e1, e2) {
+    return !((e1.position[0]+e1.width<e2.position[0] || 
+	       e2.position[0]+e2.width<e1.position[0] ||
+	       e1.position[1]+e1.height<e2.position[1] || 
+	       e2.position[1]+e2.height<e1.position[1]));
+}
+
 //Methods
 Meteor.methods({
     take: function(pieceId) {
@@ -22,14 +29,14 @@ Meteor.methods({
 	    throw new Meteor.Error("piece-locked", "The piece is already in its place!");			
 	}
 	piece.ownedBy = this.userId;
-	Puzzle.update(pieceId, piece);	
+	Pieces.update(pieceId, piece);	
     },
     move: function(pieceId, deltaX, deltaY) {
 	var piece = Pieces.findOne(pieceId);
 	if (piece.ownedBy != this.userId) {
 	    throw new Meteor.Error("piece-not-owned", "The piece doesn't belong to you!");
 	}		
-	piece.currPos = [piece.currPos[0] + deltaX, piece.currPos[1] + deltaY];
+	piece.position = [piece.position[0] + deltaX, piece.position[1] + deltaY];
 	Pieces.update(pieceId, piece);	
     },
     give: function(pieceId) {
@@ -38,20 +45,33 @@ Meteor.methods({
 	    throw new Meteor.Error("piece-not-owned", "The piece doesn't belong to you!");
 	}		
 	piece.ownedBy = undefined;
-	//Is 'piece' within its true location boundaries?
-	if (!((piece.truePos[0]+piece.width<piece.currPos[0] || 
-	       piece.currPos[0]+piece.width<piece.truePos[0] ||
-	       piece.truePos[0]+piece.height<piece.currPos[1] || 
-	       piece.currPos[1]+piece.height<piece.truePos[1]))) 
+	//Is 'piece' within its true location boundaries?	
+	if (!((piece.truePosition[0]+piece.width<piece.position[0] || 
+	       piece.position[0]+piece.width<piece.truePosition[0] ||
+	       piece.truePosition[1]+piece.height<piece.position[1] || 
+	       piece.position[1]+piece.height<piece.truePosition[1]))) 
 	{
-	    piece.currLoc = piece.trueLoc;
+	    piece.position = piece.truePosition;
 	    piece.inLock = true;			
 	}		
 	Pieces.update(pieceId, piece);		
     },
     reset: function(puzzleId) {
-	Pieces.find({puzzleId; {$eq: puzzleId}}).forEach(function(piece) {
-	    
+	var puzzle = Puzzle.find(puzzleId);
+	Pieces.find({puzzleId; {$eq: puzzleId}}).forEach(function(piece) 
+	    piece.inLock = false;
+	    do {
+		var deltaX = piece.width * (2 * Random.fraction() - 1)
+		var deltaY = piece.height * (2 * Random.fraction() - 1);
+		var newX = piece.position[0] + deltaX;
+		var newY = piece.position[1] + deltaY;
+		if (newX < 0) newX = puzzle.width + newX;
+		if (newX > puzzle.width) newX = newX - puzzle.width;
+		if (newY < 0) newY = puzzle.height + newY;
+		if (newY > puzzle.height) newY = newY - puzzle.height;
+		piece.position = [newX, newY];
+	    } while(intersect(piece, puzzle.arrangement));
+	    Pieces.update(piece._id, piece);
 	});
     }
 });
@@ -81,7 +101,7 @@ Meteor.startup(function () {
 		piece.position[0] + xpuzzle.arrangement.position[0],
 		piece.position[1] + xpuzzle.arrangement.position[1]
 	    ],
-	    currPosition: [0, 0],
+	    position: [xpuzzle.width/2, xpuzzle.height/2],
 	    height: piece.height,
 	    width: piece.width,
 	    ownedBy: undefined,
