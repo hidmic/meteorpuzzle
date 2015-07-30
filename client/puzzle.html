@@ -19,7 +19,7 @@
     {{/each}}        
   </div>    
   {{#if message}}
-    <div class="msg">
+    <div class="message">
       <p>{{message}}</p>
     </div>
   {{/if}}  
@@ -27,12 +27,12 @@
 
 <template name="arrangement">
   <div class="arrangement" style="top: {{top}}; left: {{left}}; height: {{height}}; width:{{width}};">
-    <img src="{{imageUrl}}"/>    
+    <img src="{{imageUrl}}" width="{{width}}" height="{{height}}"/>    
   </div>
 </template>
 
 <template name="piece">  
   <div id="{{pieceId}}" class="piece" style="top: {{top}}; left: {{left}}; height: {{height}}; width: {{width}};">
-    <img src="{{imageUrl}}"/>    
+    <img src="{{imageUrl}}" width="{{width}}" height="{{height}}"/
   </div>
 </template>

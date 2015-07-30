@@ -1,9 +1,17 @@
+//Collections
 var Puzzles = new MongoDB.Collection('allpuzzles');
+var Pieces = new MongoDB.Collection('allpieces');
 
-Meteor.publish('puzzle', function() {
-    return Puzzle.find({});
+//Publications
+Meteor.publish('puzzles', function() {
+    return Puzzles.find({});
 });
 
+Meteor.publish('pieces', function() {
+    return Pieces.find({}, {truePosition: 0})
+});
+
+//Methods
 Meteor.methods({
     take: function(pieceId) {
 	var piece = Pieces.findOne(pieceId);
@@ -17,12 +25,12 @@ Meteor.methods({
 	Puzzle.update(pieceId, piece);	
     },
     move: function(pieceId, deltaX, deltaY) {
-	var puzzle = Puzzle.findOne({'pieces': {$eq: pieceId}});
+	var piece = Pieces.findOne(pieceId);
 	if (piece.ownedBy != this.userId) {
 	    throw new Meteor.Error("piece-not-owned", "The piece doesn't belong to you!");
 	}		
 	piece.currPos = [piece.currPos[0] + deltaX, piece.currPos[1] + deltaY];
-	Puzzle.update(pieceId, piece);	
+	Pieces.update(pieceId, piece);	
     },
     give: function(pieceId) {
 	var piece = Pieces.findOne(pieceId);
@@ -40,16 +48,46 @@ Meteor.methods({
 	    piece.inLock = true;			
 	}		
 	Pieces.update(pieceId, piece);		
+    },
+    reset: function(puzzleId) {
+	Pieces.find({puzzleId; {$eq: puzzleId}}).forEach(function(piece) {
+	    
+	});
     }
 });
 
 Meteor.startup(function () {
-    var puzzle = EJSON.parse(Assets.getText('wall-e.json'));
-    puzzle.height = Math.floor(puzzle.arrangement.height * 1.5); // As it must be at least 1.41 times larger in order to hold all pieces
-    puzzle.width = Math.floor(puzzle.arrangement.width * 1.5);
-    for (var i = 0; i < puzzle.pieces.length; i++) {
-	puzzle.pieces[i].inLock = false;
-	puzzle.pieces[i].currPos = Random.fraction();;
-    }    
-    Puzzles.insert(puzzle);
+    var puzzle = EJSON.parse(Assets.getText('wall-e.json'));           
+    var xpuzzle = {
+	name: puzzle.name, 
+	height: puzzle.arrangement.height * 2, // As it must be at least 1.41 times larger in order to have its pieces around
+	width: puzzle.arrangement.width * 2,  // As it must be at least 1.41 times larger in order to have its pieces around
+	arrangement: {
+	    position: [
+		puzzle.arrangement.position[0] + puzzle.arrangement.width/2, 
+		puzzle.arrangement.position[1] + puzzle.arrangement.height/2
+	    ],
+	    width: puzzle.arrangement.width,
+	    height: puzzle.arrangement.height,
+	    imageUrl: puzzle.arrangement.imageUrl
+	}
+    };
+    Puzzles.insert(xpuzzle);    
+    _.each(puzzle.pieces, function(piece) {	    
+	var xpiece = {
+	    puzzleId: xpuzzle._id
+	    imageUrl: piece.imageUrl,
+	    truePosition: [
+		piece.position[0] + xpuzzle.arrangement.position[0],
+		piece.position[1] + xpuzzle.arrangement.position[1]
+	    ],
+	    currPosition: [0, 0],
+	    height: piece.height,
+	    width: piece.width,
+	    ownedBy: undefined,
+	    inLock: false
+	};
+	Pieces.insert(xpiece);
+    });
+    Meteor.call('reset', xpuzzle._id);
 });

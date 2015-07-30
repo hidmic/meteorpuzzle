@@ -1,4 +1,12 @@
+//Collections
+
+Meteor.subscribe('puzzles');
+
+var Puzzles = new MongoDB.Collection('allpuzzles');
+
 Meteor.subscribe('pieces');
+
+var Pieces = new MongoDB.Collection('allpieces');
 
 //Method stubs
 Meteor.methods({   
@@ -12,11 +20,12 @@ Meteor.methods({
     }
 });
 
-Template.body.events({
-   'resize':
+//Bpdy
+Template.body.helpers({
+    puzzle: function(){
+	return Puzzles.findOne({name: {$eq: Session.get('puzzle')}});
+    }
 });
-
-
 //Puzzle
 Template.puzzle.events({
     'mousemove': function() {
@@ -40,9 +49,22 @@ Template.puzzle.events({
 });
 
 Template.puzzle.helpers({
+    pieces: function(){
+	return Pieces.find({puzzleId: {$eq: Session.get('puzzle')}});
+    },
     message: function() {
 	return Session.get('message');
     }
+});
+
+//Arrangement
+Template.arrangement.helpers({
+   left: function(){
+       return this.fixPos[0];
+   },
+   top: function(){
+       return this.fixPos[1];
+   }  
 });
 
 //Pieces
@@ -50,21 +72,21 @@ Template.piece.events({
     'mousedown': function(event) {
 	Meteor.call('take', event.currentTarget.id, function(error) {
 	    if (error) {		
-		Session.set("errorMsg", error.reason);
+		Session.set("message", {type: 'error', content: error.reason});
 		return;
 	    }
 	    Session.set('piece', event.currentTarget.id);
 	});    	    
     },
     'mouseup': function(event) {
-    	var pieceId = Session.get('pieceId');		
+    	var pieceId = Session.get('piece');		
 	if (pieceId != undefined) {
 	    Meteor.call('give', pieceId, function(error) {
 		if (error) {		
-		    Session.set("errorMsg", error.reason);
+		    Session.set("message", {type: 'error', content: error.reason});
 		    return;		    
 		}
-		Session.set('pieceId', undefined);	    
+		Session.set('piece', undefined);	    
 	    });    	    	
 	}
     }
@@ -81,9 +103,8 @@ Template.pieces.helpers({
 
 
 Meteor.startup(function(){
-    window.onresize = function(event){
-   	Session.set("",);
-    };
+    var onePuzzle = Puzzle.findOne({});
+    Session.set('puzzle', onePuzzle._id);
 });
 
 
