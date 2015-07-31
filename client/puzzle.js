@@ -1,3 +1,19 @@
+//Misc
+
+function growUpto(innerBlock, outerBlock) {
+    var wscale = outerBlock.width / innerBlock.width;
+    var hscale = outerBlock.height / innerBlock.height;
+    if (hscale > wscale) {
+	return wscale;
+    }
+    return hscale;
+}
+
+function blockify(domElem) {
+    var rect = domElem.getBoundingClientRect();
+    return {position: [rect.left, rect.top], height: domElem.clientHeight, width: domElem.clientWidth};
+}
+
 //Collections
 
 var Puzzles = new Mongo.Collection('allpuzzles');
@@ -21,9 +37,9 @@ Template.body.onCreated(function(){
     this.subscribe('puzzles', function() {
 	var puzzle = Puzzles.findOne();
 	Session.set('puzzle', puzzle._id);	
-	Session.set('scale', growUpto(puzzle, blockify(that.find('.resizer'))));
+	Session.set('scale', growUpto(puzzle, blockify(that.find('.container'))));
 	$(window).resize(function(event) {
-	    Session.set('scale', growUpto(puzzle, blockify(that.find('.resizer'))));
+	    Session.set('scale', growUpto(puzzle, blockify(that.find('.container'))));
 	});
     });
     this.subscribe('pieces');
@@ -32,8 +48,11 @@ Template.body.onCreated(function(){
 Template.body.helpers({
     puzzle: function() {	
 	var puzzle = Puzzles.findOne(Session.get('puzzle'));			
+	var container = blockify(Template.instance().find('.container'));
 	puzzle.height = puzzle.height * Session.get('scale');
 	puzzle.width = puzzle.width * Session.get('scale');
+	puzzle.position = [container.position[0] + (container.width - puzzle.width)/2, 
+			   container.position[1] + (container.height - puzzle.height)/2];
 	puzzle.arrangement.height = puzzle.arrangement.height * Session.get('scale');
 	puzzle.arrangement.width = puzzle.arrangement.width * Session.get('scale');
 	puzzle.arrangement.position = _.map(puzzle.arrangement.position, function (coord) { return coord * Session.get('scale'); });
@@ -74,7 +93,14 @@ Template.puzzleTemplate.helpers({
 	    piece.position = _.map(piece.position, function (coord, index, array) { return coord * scale; });
 	    return piece;
 	});
+    },
+    left: function(){
+	return this.position[0];
+    },
+    top: function(){
+	return this.position[1];
     }
+    
 });
 
 //Arrangement

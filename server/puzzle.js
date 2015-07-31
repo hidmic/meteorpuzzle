@@ -1,3 +1,12 @@
+//Misc
+
+function intersects(block1, block2, tolerance) {
+    return !((block1.position[0]+block1.width+tolerance<block2.position[0] || 
+	       block2.position[0]+block2.width+tolerance<block1.position[0] ||
+	       block1.position[1]+block1.height+tolerance<block2.position[1] || 
+	       block2.position[1]+block2.height+tolerance<block1.position[1]));
+}
+
 //Collections
 var Puzzles = new Mongo.Collection('allpuzzles');
 var Pieces = new Mongo.Collection('allpieces');
@@ -76,6 +85,7 @@ Meteor.startup(function () {
 	    name: puzzle.name, 
 	    height: puzzle.arrangement.height * 2, // As it must be at least 1.41 times larger in order to have its pieces around
 	    width: puzzle.arrangement.width * 2,  // As it must be at least 1.41 times larger in order to have its pieces around
+	    position: [0, 0],
 	    arrangement: {
 		position: [
 		    puzzle.arrangement.width/2, 

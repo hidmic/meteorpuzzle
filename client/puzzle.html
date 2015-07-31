@@ -4,24 +4,25 @@
 
 <body>
   <header>
-    <h1>MeteorJs meets Wall-E</h1>  
+    <img src="title.png" alt="Meteor meets Wall-E" height="60px" width="600px"/>
   </header>
-  <div class="resizer">
+  <div class="container">
     {{#if Template.subscriptionsReady}}
       {{> puzzleTemplate puzzle}}   
-    {{else}}
-      <div>
-	<p>Loading...</p>
-      </div>
     {{/if}}
   </div>
   <footer>
-    <p>Developed by Michel Hidalgo</p>
+    <p>
+      Developed by <br/>
+      <a href="mailto:hidmichel@gmail.com">
+	Michel Hidalgo
+      </a>
+    </p>
   </footer>
 </body>	
 
 <template name="puzzleTemplate">  
-  <div class="puzzle" style="height: {{height}}px; width:{{width}}px;">        
+  <div class="puzzle" style="top: {{top}}px; left: {{left}}px; height: {{height}}px; width:{{width}}px;">        
     {{> arrangeTemplate arrangement}}      
     {{#each pieces}}	        
       {{> pieceTemplate}}
