@@ -1,19 +1,40 @@
+
+html, body {
+    height: 100%;
+}
+
+header {
+    text-align: center;
+}
+
+.container {
+    height: 100%;
+    display: flex;
+    flex-direction: vertical;
+}
+
 .puzzle {
-	overflow: scroll;
+    position: absolute;
+    display: block;
+    margin: auto;
+    overflow: auto;
+    flex: 1;
     z-index:-1;
 }
 
 .arrangement {
-	position:absolute;
-	z-index:0;
+    position: absolute;
+    display: inline-block;
+    z-index:0;
 }
 
 .piece {
     position: absolute;
+    display: inline-block;
     z-index:1;
 }
 
-.msg {
-	position: fixed;
-	z-index:2;
+.message {
+    position: fixed;
+    z-index:2;
 }

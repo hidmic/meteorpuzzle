@@ -21,14 +21,35 @@ Meteor.methods({
 
 //Body
 Template.body.helpers({
-    ready: function(){
-	return PuzzleSubscription.ready() && PieceSubscription.ready();
+    ready: function() {
+	var subscriptionsReady = PuzzleSubscription.ready() && PieceSubscription.ready();
+	if (subscriptionsReady) {
+	    var puzzle = Puzzles.findOne();
+	    var container = Template.body.find('.container');
+	    Session.set('puzzle', puzzle._id);
+	    Session.set('scale', Math.sqrt((container.clientWidth * container.clientHeight)/(puzzle.height * puzzle.width)));
+	}
+	return subscriptionsReady;
     },
     puzzle: function() {	
-	return Puzzles.findOne();
+	var puzzle = Puzzles.findOne(Session.get('puzzle'));			
+	puzzle.height = puzzle.height * Session.get('scale');
+	puzzle.width = puzzle.width * Session.get('scale');
+	puzzle.arrangement.height = puzzle.arrangement.height * Session.get('scale');
+	puzzle.arrangement.width = puzzle.arrangement.width * Session.get('scale');
+	puzzle.arrangement.position = _.map(puzzle.arrangement.position, function (coord) { return coord * Session.get('scale'); });
+	console.log(puzzle);
+	return puzzle;
     }
 });
 
+Template.body.events({
+    'resize': function(event) {
+	var puzzle = Puzzles.findOne(Session.get('puzzle'));
+	var container = Template.body.find('.container');
+	Session.set('scale', Math.sqrt((container.clientWidth * container.clientHeight)/(puzzle.height * puzzle.width)));
+    }
+});
 //Puzzle
 Template.puzzleTemplate.events({
     'mousemove': function() {
@@ -38,7 +59,9 @@ Template.puzzleTemplate.events({
 	return function(event) {
 	    var pieceId = Session.get('piece');
 	    if (pieceId != undefined) {
-		Meteor.call('move', pieceId, event.clientX - lastX, event.clientY - lastY, function(error) {
+		var deltaX = (event.clientX - lastX) / Session.get('scale');
+		var deltaY = (event.clientY - lastY) / Session.get('scale');
+		Meteor.call('move', pieceId, deltaX, deltaY, function(error) {
 		    if (error) {
 			Session.set("message", {type: 'error',  content: 'error.reason'});
 			return;
@@ -53,7 +76,11 @@ Template.puzzleTemplate.events({
 
 Template.puzzleTemplate.helpers({    
     pieces: function() {	
-	return Pieces.find({puzzleId: {$eq: this._id}});
+	return Pieces.find({puzzleId: this._id}).map(function(piece){
+	    piece.height = piece.height * Session.get('scale');
+	    piece.width = piece.width * Session.get('scale');
+	    piece.position = _.map(piece.position, function (coord) { return coord * Session.get('scale'); });
+	});
     }
 });
 
@@ -64,7 +91,7 @@ Template.arrangeTemplate.helpers({
    },
    top: function(){
        return this.position[1];
-   }  
+   }
 });
 
 //Pieces
@@ -94,11 +121,9 @@ Template.pieceTemplate.events({
 
 Template.pieceTemplate.helpers({           
     top: function() {
-	console.log(this);
     	return this.position[1];
     },
     left: function() {   
-	console.log(this); 	
 	return this.position[0];		
     }            
 });

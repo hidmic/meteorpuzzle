@@ -3,29 +3,33 @@
 </head>
 
 <body>
-  <h1>MeteorJs meets Wall-E</h1>  
-  {{#if ready}}
-    {{> puzzleTemplate puzzle}}   
-  {{/if}}
+  <header>
+    <h1>MeteorJs meets Wall-E</h1>  
+  </header>
+  <div class="container">
+    {{#if ready}}
+      {{> puzzleTemplate puzzle}}   
+    {{/if}}
+  </div>
 </body>	
 
 <template name="puzzleTemplate">  
-  <div class="puzzle" style="height: {{height}}; width:{{width}};">        
-    {{> arrangeTemplate arrangement}}      
+  <div class="puzzle" style="height: {{height}}px; width:{{width}}px;">        
+<!--    {{> arrangeTemplate arrangement}}      
     {{#each pieces}}	        
       {{> pieceTemplate}}
-    {{/each}}        
+    {{/each}}   -->
   </div>    
 </template>
 
 <template name="arrangeTemplate">
-  <div class="arrangement" style="top: {{top}}; left: {{left}}; height: {{height}}; width:{{width}};">
-    <img src="{{imageUrl}}" width="{{width}}" height="{{height}}"/>
+  <div class="arrangement" style="top: {{top}}px; left: {{left}}px; height: {{height}}px; width:{{width}}px;">
+    <img src="{{imageUrl}}" width="{{width}}px" height="{{height}}px"/>
   </div>
 </template>
 
 <template name="pieceTemplate">  
-  <div id={{_id}} class="piece" style="top: {{top}}; left: {{left}}; height: {{height}}; width: {{width}};">
-    <img src="{{imageUrl}}" width="{{width}}" height="{{height}}"/>
+  <div id={{_id}} class="piece" style="top: {{top}}px; left: {{left}}px; height: {{height}}px; width: {{width}}px;">
+    <img src="{{imageUrl}}" width="{{width}}px" height="{{height}}px"/>
   </div>
 </template>
