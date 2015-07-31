@@ -63,18 +63,11 @@ Meteor.methods({
 		if (newY < 0) newY = puzzle.height + newY;
 		if (newY + piece.height > puzzle.height) newY = newY + piece.height - puzzle.height;
 		piece.position = [newX, newY];
-	    } while(intersects(piece, puzzle.arrangement));
+	    } while(intersects(piece, puzzle.arrangement, 30));
 	    Pieces.update(piece._id, piece);
 	});
     }
 });
-
-function intersects(e1, e2) {
-    return !((e1.position[0]+e1.width<e2.position[0] || 
-	       e2.position[0]+e2.width<e1.position[0] ||
-	       e1.position[1]+e1.height<e2.position[1] || 
-	       e2.position[1]+e2.height<e1.position[1]));
-}
 
 Meteor.startup(function () {
     if (Puzzles.find().count() === 0) {

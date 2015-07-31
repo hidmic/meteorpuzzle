@@ -3,10 +3,6 @@
 var Puzzles = new Mongo.Collection('allpuzzles');
 var Pieces = new Mongo.Collection('allpieces');
 
-//Subscriptions
-var PuzzleSubscription = Meteor.subscribe('puzzles');
-var PieceSubscription = Meteor.subscribe('pieces');
-
 //Method stubs
 Meteor.methods({   
     move: function(pieceId, deltaX, deltaY) {
@@ -20,17 +16,20 @@ Meteor.methods({
 });
 
 //Body
+Template.body.onCreated(function(){
+    var that = this;
+    this.subscribe('puzzles', function() {
+	var puzzle = Puzzles.findOne();
+	Session.set('puzzle', puzzle._id);	
+	Session.set('scale', growUpto(puzzle, blockify(that.find('.resizer'))));
+	$(window).resize(function(event) {
+	    Session.set('scale', growUpto(puzzle, blockify(that.find('.resizer'))));
+	});
+    });
+    this.subscribe('pieces');
+});
+
 Template.body.helpers({
-    ready: function() {
-	var subscriptionsReady = PuzzleSubscription.ready() && PieceSubscription.ready();
-	if (subscriptionsReady) {
-	    var puzzle = Puzzles.findOne();
-	    var container = Template.body.find('.container');
-	    Session.set('puzzle', puzzle._id);
-	    Session.set('scale', Math.sqrt((container.clientWidth * container.clientHeight)/(puzzle.height * puzzle.width)));
-	}
-	return subscriptionsReady;
-    },
     puzzle: function() {	
 	var puzzle = Puzzles.findOne(Session.get('puzzle'));			
 	puzzle.height = puzzle.height * Session.get('scale');
@@ -38,21 +37,13 @@ Template.body.helpers({
 	puzzle.arrangement.height = puzzle.arrangement.height * Session.get('scale');
 	puzzle.arrangement.width = puzzle.arrangement.width * Session.get('scale');
 	puzzle.arrangement.position = _.map(puzzle.arrangement.position, function (coord) { return coord * Session.get('scale'); });
-	console.log(puzzle);
 	return puzzle;
     }
 });
 
-Template.body.events({
-    'resize': function(event) {
-	var puzzle = Puzzles.findOne(Session.get('puzzle'));
-	var container = Template.body.find('.container');
-	Session.set('scale', Math.sqrt((container.clientWidth * container.clientHeight)/(puzzle.height * puzzle.width)));
-    }
-});
 //Puzzle
 Template.puzzleTemplate.events({
-    'mousemove': function() {
+    'mousemove .puzzle': (function() {
 	var lastX;
 	var lastY;
 	
@@ -71,15 +62,17 @@ Template.puzzleTemplate.events({
 	    lastX = event.clientX;
 	    lastY = event.clientY;
 	}
-    }()
+    }())
 });
 
 Template.puzzleTemplate.helpers({    
-    pieces: function() {	
-	return Pieces.find({puzzleId: this._id}).map(function(piece){
-	    piece.height = piece.height * Session.get('scale');
-	    piece.width = piece.width * Session.get('scale');
-	    piece.position = _.map(piece.position, function (coord) { return coord * Session.get('scale'); });
+    pieces: function() {
+	var scale = Session.get('scale');
+	return Pieces.find({puzzleId: this._id}).map(function(piece, index, cursor){
+	    piece.height = piece.height * scale;
+	    piece.width = piece.width * scale;
+	    piece.position = _.map(piece.position, function (coord, index, array) { return coord * scale; });
+	    return piece;
 	});
     }
 });
@@ -96,17 +89,8 @@ Template.arrangeTemplate.helpers({
 
 //Pieces
 Template.pieceTemplate.events({
-    'mousedown': function(event) {
-	Meteor.call('take', event.currentTarget.id, function(error) {
-	    if (error) {		
-		Session.set("message", {type: 'error', content: error.reason});
-		return;
-	    }
-	    Session.set('piece', event.currentTarget.id);
-	});    	    
-    },
-    'mouseup': function(event) {
-    	var pieceId = Session.get('piece');		
+    'mousedown .piece': function(event) {
+	var pieceId = Session.get('piece');
 	if (pieceId != undefined) {
 	    Meteor.call('give', pieceId, function(error) {
 		if (error) {		
@@ -115,7 +99,16 @@ Template.pieceTemplate.events({
 		}
 		Session.set('piece', undefined);	    
 	    });    	    	
+	} else {
+	    Meteor.call('take', event.currentTarget.id, function(error) {
+		if (error) {		
+		    Session.set("message", {type: 'error', content: error.reason});
+		    return;
+		}
+		Session.set('piece', event.currentTarget.id);
+	    });
 	}
+	event.stopPropagation();
     }
 });
 

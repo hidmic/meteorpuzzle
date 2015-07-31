@@ -6,19 +6,26 @@
   <header>
     <h1>MeteorJs meets Wall-E</h1>  
   </header>
-  <div class="container">
-    {{#if ready}}
+  <div class="resizer">
+    {{#if Template.subscriptionsReady}}
       {{> puzzleTemplate puzzle}}   
+    {{else}}
+      <div>
+	<p>Loading...</p>
+      </div>
     {{/if}}
   </div>
+  <footer>
+    <p>Developed by Michel Hidalgo</p>
+  </footer>
 </body>	
 
 <template name="puzzleTemplate">  
   <div class="puzzle" style="height: {{height}}px; width:{{width}}px;">        
-<!--    {{> arrangeTemplate arrangement}}      
+    {{> arrangeTemplate arrangement}}      
     {{#each pieces}}	        
       {{> pieceTemplate}}
-    {{/each}}   -->
+    {{/each}}  
   </div>    
 </template>
 
